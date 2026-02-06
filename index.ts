@@ -25,8 +25,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import { checkbox, input, select } from "@inquirer/prompts";
 import type { ZodObject, ZodRawShape, ZodTypeAny } from "zod";
+import { handlers } from "./prompt-handlers";
 
 export interface SchemaPrompterOptions {
 	maxRetries?: number;
@@ -37,7 +37,6 @@ export const zodPrompter = async (
 	ZodSchema: ZodObject<ZodRawShape>,
 	options: SchemaPrompterOptions = {},
 ) => {
-	// Dynamically build prompts from the ZodSchema so we don't hardcode fields
 	const schema = ZodSchema;
 	const schemaShape = schema.shape;
 	const fields: string[] = Object.keys(schemaShape || {});
@@ -50,49 +49,16 @@ export const zodPrompter = async (
 
 	for (const key of fields) {
 		const message = `Enter your ${key.replace(/([A-Z])/g, " $1").toLowerCase()}:`;
-
-		// Validate the input using the Zod schema and reprompt until valid
 		const fieldSchema = schemaShape[key] as ZodTypeAny;
+
 		let attempts = 0;
 		while (true) {
-			let value: unknown;
-
-			// biome-ignore lint/suspicious/noExplicitAny: support multiple zod versions
-			const def = (fieldSchema as any)._def;
-			const typeName = def.typeName || def.type;
-
-			if (typeName === "ZodEnum" || typeName === "enum") {
-				// biome-ignore lint/suspicious/noExplicitAny: needed for Zod internal inspection
-				const enumValues = def.values || (def.entries ? Object.keys(def.entries) : (fieldSchema as any).options) || [];
-				value = await select({
-					message,
-					choices: enumValues.map((v: string) => ({ name: v, value: v })),
-				});
-			} else if (typeName === "ZodArray" || typeName === "array") {
-				const element =
-					def.element || (typeof def.type === "object" ? def.type : undefined);
-				const elementTypeName = element?._def?.typeName || element?._def?.type;
-				if (
-					element &&
-					(elementTypeName === "ZodEnum" || elementTypeName === "enum")
-				) {
-					const elementDef = element._def;
-					const enumValues =
-						elementDef.values ||
-						(elementDef.entries
-							? Object.keys(elementDef.entries)
-							: element.options) ||
-						[];
-					value = await checkbox({
-						message,
-						choices: enumValues.map((v: string) => ({ name: v, value: v })),
-					});
-				} else {
-					value = await input({ message });
-				}
-			} else {
-				value = await input({ message });
+			const handler = handlers.find((h) => h.canHandle(fieldSchema, key));
+			if (!handler) {
+				throw new Error(`No handler found for field: ${key}`);
 			}
+
+			const value = await handler.prompt(fieldSchema, key, message);
 
 			const result = fieldSchema.safeParse(value);
 			if (result.success) {
