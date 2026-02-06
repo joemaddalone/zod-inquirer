@@ -25,9 +25,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import { input, checkbox, select } from '@inquirer/prompts';
+import { checkbox, input, select } from "@inquirer/prompts";
 import type { ZodObject, ZodRawShape, ZodTypeAny } from "zod";
-
 
 export interface SchemaPrompterOptions {
 	maxRetries?: number;
@@ -45,7 +44,8 @@ export const zodPrompter = async (
 
 	const answers: Record<string, unknown> = {};
 
-	const maxRetries = typeof options.maxRetries === "number" ? options.maxRetries : 3;
+	const maxRetries =
+		typeof options.maxRetries === "number" ? options.maxRetries : 3;
 	const hint = options.hint ?? "press Ctrl+C to abort";
 
 	for (const key of fields) {
@@ -57,24 +57,39 @@ export const zodPrompter = async (
 		while (true) {
 			let value: unknown;
 
-			const def = (fieldSchema as unknown as { _def: { typeName: string; values?: string[]; type?: { _def: { typeName: string; values?: string[]; }; }; }; })._def;
+			// biome-ignore lint/suspicious/noExplicitAny: support multiple zod versions
+			const def = (fieldSchema as any)._def;
+			const typeName = def.typeName || def.type;
 
-			if (def.typeName === "ZodEnum") {
-				const enumValues = def.values || [];
+			if (typeName === "ZodEnum" || typeName === "enum") {
+				// biome-ignore lint/suspicious/noExplicitAny: needed for Zod internal inspection
+				const enumValues = def.values || (def.entries ? Object.keys(def.entries) : (fieldSchema as any).options) || [];
 				value = await select({
 					message,
-					choices: enumValues.map((v: string) => ({ name: v, value: v }))
+					choices: enumValues.map((v: string) => ({ name: v, value: v })),
 				});
-			} else if (
-				def.typeName === "ZodArray" &&
-				def.type?._def?.typeName === "ZodEnum"
-			) {
-				const elementDef = def.type._def;
-				const enumValues = elementDef.values || [];
-				value = await checkbox({
-					message,
-					choices: enumValues.map((v: string) => ({ name: v, value: v }))
-				});
+			} else if (typeName === "ZodArray" || typeName === "array") {
+				const element =
+					def.element || (typeof def.type === "object" ? def.type : undefined);
+				const elementTypeName = element?._def?.typeName || element?._def?.type;
+				if (
+					element &&
+					(elementTypeName === "ZodEnum" || elementTypeName === "enum")
+				) {
+					const elementDef = element._def;
+					const enumValues =
+						elementDef.values ||
+						(elementDef.entries
+							? Object.keys(elementDef.entries)
+							: element.options) ||
+						[];
+					value = await checkbox({
+						message,
+						choices: enumValues.map((v: string) => ({ name: v, value: v })),
+					});
+				} else {
+					value = await input({ message });
+				}
 			} else {
 				value = await input({ message });
 			}
@@ -86,7 +101,9 @@ export const zodPrompter = async (
 			}
 
 			attempts++;
-			console.log(`Invalid value for ${key}: ${result.error.issues[0].message} (${attempts}/${maxRetries}). ${hint}`);
+			console.log(
+				`Invalid value for ${key}: ${result.error.issues[0].message} (${attempts}/${maxRetries}). ${hint}`,
+			);
 			if (attempts >= maxRetries) {
 				throw new Error(`Too many invalid attempts for ${key}`);
 			}

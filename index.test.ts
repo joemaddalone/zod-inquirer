@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { zodPrompter } from "./index";
+import { checkbox, input, select } from "@inquirer/prompts";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
-import { input, select, checkbox } from "@inquirer/prompts";
+import { zodPrompter } from "./index";
 
 vi.mock("@inquirer/prompts", () => ({
 	input: vi.fn(),
@@ -23,7 +23,9 @@ describe("zodPrompter", () => {
 
 		const result = await zodPrompter(schema);
 
-		expect(input).toHaveBeenCalledWith(expect.objectContaining({ message: "Enter your name:" }));
+		expect(input).toHaveBeenCalledWith(
+			expect.objectContaining({ message: "Enter your name:" }),
+		);
 		expect(result).toEqual({ name: "John Doe" });
 	});
 
@@ -36,14 +38,16 @@ describe("zodPrompter", () => {
 
 		const result = await zodPrompter(schema);
 
-		expect(select).toHaveBeenCalledWith(expect.objectContaining({
-			message: "Enter your size:",
-			choices: [
-				{ name: "small", value: "small" },
-				{ name: "medium", value: "medium" },
-				{ name: "large", value: "large" },
-			],
-		}));
+		expect(select).toHaveBeenCalledWith(
+			expect.objectContaining({
+				message: "Enter your size:",
+				choices: [
+					{ name: "small", value: "small" },
+					{ name: "medium", value: "medium" },
+					{ name: "large", value: "large" },
+				],
+			}),
+		);
 		expect(result).toEqual({ size: "medium" });
 	});
 
@@ -56,13 +60,15 @@ describe("zodPrompter", () => {
 
 		const result = await zodPrompter(schema);
 
-		expect(checkbox).toHaveBeenCalledWith(expect.objectContaining({
-			message: "Enter your toppings:",
-			choices: [
-				{ name: "pepperoni", value: "pepperoni" },
-				{ name: "mushrooms", value: "mushrooms" },
-			],
-		}));
+		expect(checkbox).toHaveBeenCalledWith(
+			expect.objectContaining({
+				message: "Enter your toppings:",
+				choices: [
+					{ name: "pepperoni", value: "pepperoni" },
+					{ name: "mushrooms", value: "mushrooms" },
+				],
+			}),
+		);
 		expect(result).toEqual({ toppings: ["pepperoni"] });
 	});
 });
