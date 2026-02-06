@@ -17,11 +17,15 @@ import { z } from "zod";
 import { zodPrompter } from "zod-inquirer";
 
 const PizzaSchema = z.object({
-  name: z.string(),
-  email: z.email(),
-  age: z.number().int().positive(),
-  size: z.enum(["small", "medium", "large"]),
-  crust: z.enum(["thin", "thick", "stuffed"]),
+  name: z.string().describe("Enter your name"), // Zod 3 style
+  email: z.email().meta({ description: "Enter your email" }), // Zod 4 style
+  age: z.number().int().positive(), // will use default description
+  size: z
+    .enum(["small", "medium", "large"])
+    .meta({ description: "Select your size" }),
+  crust: z
+    .enum(["thin", "thick", "stuffed"])
+    .meta({ description: "Select your crust" }),
   toppings: z
     .array(
       z.enum([
@@ -34,9 +38,10 @@ const PizzaSchema = z.object({
       ]),
     )
     .min(1, { message: "You must select at least one topping." })
-    .max(3, { message: "You can select up to 3 toppings." }),
-  acceptTerms: z.boolean(),
-  password: z.string().min(8),
+    .max(3, { message: "You can select up to 3 toppings." })
+    .meta({ description: "Select up to 3 toppings" }),
+  acceptTerms: z.boolean().meta({ description: "Accept terms and conditions" }),
+  password: z.string().min(8).meta({ description: "Enter your password" }),
 });
 
 const pizza = await zodPrompter(PizzaSchema);
@@ -46,9 +51,13 @@ console.log(pizza);
 This will automatically prompt the user with:
 
 - A text input for `name`
+- A text input for `email`
+- A number input for `age`
 - A select dropdown for `size`
 - A select dropdown for `crust`
 - A checkbox list for `toppings`
+- A confirm checkbox for `acceptTerms`
+- A password input for `password`
 
 All inputs are validated against your Zod schema with automatic retry on validation failure.
 
@@ -63,9 +72,12 @@ await zodPrompter(schema, {
 
 ## Supported Types
 
-- `z.string()` - Text input
+- `z.string()` - Text input, masked based on name: `password`, `secret`, `token`, `apikey`, `apiKey`, `api_key`
 - `z.enum()` - Select dropdown
 - `z.array(z.enum())` - Checkbox multi-select
+- `z.boolean()` - Checkbox
+- `z.number()` - Number input
+- `z.email()` - Email input
 
 ## License
 

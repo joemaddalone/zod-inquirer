@@ -53,25 +53,35 @@ export const zodPrompter = async (
 
 		let attempts = 0;
 		while (true) {
-			const handler = handlers.find((h) => h.canHandle(fieldSchema, key));
-			if (!handler) {
-				throw new Error(`No handler found for field: ${key}`);
-			}
+			try {
+				const handler = handlers.find((h) => h.canHandle(fieldSchema, key));
+				if (!handler) {
+					throw new Error(`No handler found for field: ${key}`);
+				}
 
-			const value = await handler.prompt(fieldSchema, key, message);
+				const value = await handler.prompt(fieldSchema, key, message);
 
-			const result = fieldSchema.safeParse(value);
-			if (result.success) {
-				answers[key] = result.data;
-				break;
-			}
+				const result = fieldSchema.safeParse(value);
+				if (result.success) {
+					answers[key] = result.data;
+					break;
+				}
 
-			attempts++;
-			console.log(
-				`Invalid value for ${key}: ${result.error.issues[0].message} (${attempts}/${maxRetries}). ${hint}`,
-			);
-			if (attempts >= maxRetries) {
-				throw new Error(`Too many invalid attempts for ${key}`);
+				attempts++;
+				console.log(
+					`Invalid value for ${key}: ${result.error.issues[0].message} (${attempts}/${maxRetries}). ${hint}`,
+				);
+				if (attempts >= maxRetries) {
+					throw new Error(`Too many invalid attempts for ${key}`);
+				}
+			} catch (error) {
+				if (
+					error instanceof Error &&
+					error.message.includes("force closed the prompt")
+				) {
+					process.exit(0);
+				}
+				throw error;
 			}
 		}
 	}

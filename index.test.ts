@@ -71,4 +71,23 @@ describe("zodPrompter", () => {
 		);
 		expect(result).toEqual({ toppings: ["pepperoni"] });
 	});
+
+	it("should exit gracefully on Ctrl+C", async () => {
+		const schema = z.object({
+			name: z.string(),
+		});
+
+		vi.mocked(input).mockRejectedValue(
+			new Error("User force closed the prompt with SIGINT"),
+		);
+
+		const exitSpy = vi.spyOn(process, "exit").mockImplementation(() => {
+			throw new Error("process.exit called");
+		});
+
+		await expect(zodPrompter(schema)).rejects.toThrow("process.exit called");
+		expect(exitSpy).toHaveBeenCalledWith(0);
+
+		exitSpy.mockRestore();
+	});
 });

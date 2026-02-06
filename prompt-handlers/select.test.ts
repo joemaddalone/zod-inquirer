@@ -46,5 +46,22 @@ describe("selectHandler", () => {
 			});
 			expect(result).toBe("medium");
 		});
+
+		it("should use description from .describe() if available", async () => {
+			const schema = z.enum(["small", "medium", "large"]).describe("Choose your size");
+			vi.mocked(select).mockResolvedValue("large");
+
+			const result = await selectHandler.prompt(schema, "size", "Select size:");
+
+			expect(select).toHaveBeenCalledWith({
+				message: "Choose your size",
+				choices: [
+					{ name: "small", value: "small" },
+					{ name: "medium", value: "medium" },
+					{ name: "large", value: "large" },
+				],
+			});
+			expect(result).toBe("large");
+		});
 	});
 });

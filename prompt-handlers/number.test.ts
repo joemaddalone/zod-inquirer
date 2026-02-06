@@ -39,5 +39,16 @@ describe("numberHandler", () => {
 			expect(number).toHaveBeenCalledWith({ message: "Enter age:" });
 			expect(result).toBe(42);
 		});
+
+		it("should use description from .describe() if available", async () => {
+			const { number } = await import("@inquirer/prompts");
+			const schema = z.number().describe("Your age in years");
+			vi.mocked(number).mockResolvedValue(25);
+
+			const result = await numberHandler.prompt(schema, "age", "Enter age:");
+
+			expect(number).toHaveBeenCalledWith({ message: "Your age in years" });
+			expect(result).toBe(25);
+		});
 	});
 });

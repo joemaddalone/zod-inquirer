@@ -17,13 +17,16 @@ export const selectHandler: PromptHandler = {
 	) => {
 		// biome-ignore lint/suspicious/noExplicitAny: support multiple zod versions
 		const def = (fieldSchema as any)._def;
+		// biome-ignore lint/suspicious/noExplicitAny: support multiple zod versions
+		const description = (fieldSchema as any).description;
 		const enumValues =
 			def.values ||
 			// biome-ignore lint/suspicious/noExplicitAny: support multiple zod versions
 			(def.entries ? Object.keys(def.entries) : (fieldSchema as any).options) ||
 			[];
+		const finalMessage = description || message;
 		return await select({
-			message,
+			message: finalMessage,
 			choices: enumValues.map((v: string) => ({ name: v, value: v })),
 		});
 	},

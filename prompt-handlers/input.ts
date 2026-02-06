@@ -11,10 +11,13 @@ export const inputHandler: PromptHandler = {
 	},
 
 	prompt: async (
-		_fieldSchema: ZodTypeAny,
+		fieldSchema: ZodTypeAny,
 		_fieldName: string,
 		message: string,
 	) => {
-		return await input({ message });
+		// biome-ignore lint/suspicious/noExplicitAny: support multiple zod versions
+		const description = (fieldSchema as any).description;
+		const finalMessage = description || message;
+		return await input({ message: finalMessage });
 	},
 };

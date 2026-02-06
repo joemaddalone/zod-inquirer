@@ -55,5 +55,21 @@ describe("checkboxHandler", () => {
 			});
 			expect(result).toEqual(["pepperoni", "mushrooms"]);
 		});
+
+		it("should use description from .describe() if available", async () => {
+			const schema = z.array(z.enum(["a", "b"])).describe("Pick your options");
+			vi.mocked(checkbox).mockResolvedValue(["a"]);
+
+			const result = await checkboxHandler.prompt(schema, "options", "Select options:");
+
+			expect(checkbox).toHaveBeenCalledWith({
+				message: "Pick your options",
+				choices: [
+					{ name: "a", value: "a" },
+					{ name: "b", value: "b" },
+				],
+			});
+			expect(result).toEqual(["a"]);
+		});
 	});
 });

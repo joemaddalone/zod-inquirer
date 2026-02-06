@@ -39,5 +39,25 @@ describe("inputHandler", () => {
 			expect(input).toHaveBeenCalledWith({ message: "Enter name:" });
 			expect(result).toBe("test value");
 		});
+
+		it("should use description from .describe() if available", async () => {
+			const schema = z.string().describe("Your first name");
+			vi.mocked(input).mockResolvedValue("John");
+
+			const result = await inputHandler.prompt(schema, "firstName", "Enter your first name:");
+
+			expect(input).toHaveBeenCalledWith({ message: "Your first name" });
+			expect(result).toBe("John");
+		});
+
+		it("should use description from .meta() if available", async () => {
+			const schema = z.string().meta({ description: "Your last name" });
+			vi.mocked(input).mockResolvedValue("Doe");
+
+			const result = await inputHandler.prompt(schema, "lastName", "Enter your last name:");
+
+			expect(input).toHaveBeenCalledWith({ message: "Your last name" });
+			expect(result).toBe("Doe");
+		});
 	});
 });
