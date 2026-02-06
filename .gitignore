@@ -1,0 +1,13 @@
+# Dependencies
+node_modules
+# Build
+dist
+# Test
+coverage
+# Bullshit sometimes...
+.DS_Store
+.agent
+.cursor
+.github/copilot-instructions.md
+AGENTS.MD
+.windsurf

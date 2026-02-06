@@ -1,0 +1,51 @@
+{
+  "name": "zod-inquirer",
+  "version": "0.1.0",
+  "description": "Generate validated inquirer.js prompts from Zod schemas.",
+  "license": "MIT",
+  "author": "Joe Maddalone",
+  "types": "dist/index.d.ts",
+  "main": "dist/index.js",
+  "module": "dist/esm/index.js",
+  "cjs": "dist/index.cjs",
+  "iife": "dist/iife/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "postbuild": "cp dist/index.js dist/index.cjs",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "coverage": "vitest run --coverage",
+    "clean": "rm -rf dist",
+    "lint": "biome lint .",
+    "format": "biome format --write .",
+    "fix": "biome check --fix ."
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joemaddalone/zod-inquirer.git"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "^8.2.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.14",
+    "@types/node": "^25.0.8",
+    "@vitest/coverage-v8": "^3.2.4",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}
