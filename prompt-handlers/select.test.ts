@@ -47,6 +47,28 @@ describe("selectHandler", () => {
 			expect(result).toBe("medium");
 		});
 
+		it("should use provided choices when passed", async () => {
+			const schema = z.string();
+			vi.mocked(select).mockResolvedValue("medium");
+
+			const result = await selectHandler.prompt(
+				schema,
+				"size",
+				"Select size:",
+				["small", "medium", "large"],
+			);
+
+			expect(select).toHaveBeenCalledWith({
+				message: "Select size:",
+				choices: [
+					{ name: "small", value: "small" },
+					{ name: "medium", value: "medium" },
+					{ name: "large", value: "large" },
+				],
+			});
+			expect(result).toBe("medium");
+		});
+
 		it("should use description from .describe() if available", async () => {
 			const schema = z.enum(["small", "medium", "large"]).describe("Choose your size");
 			vi.mocked(select).mockResolvedValue("large");

@@ -27,10 +27,14 @@
 
 import type { ZodObject, ZodRawShape, ZodTypeAny } from "zod";
 import { handlers } from "./prompt-handlers";
+import { checkboxHandler } from "./prompt-handlers/checkbox";
+import { selectHandler } from "./prompt-handlers/select";
+import type { PromptChoice } from "./prompt-handlers/types";
 
 export interface SchemaPrompterOptions {
 	maxRetries?: number;
 	hint?: string;
+	choices?: Record<string, PromptChoice[]>;
 }
 
 export const zodPrompter = async (
@@ -54,14 +58,29 @@ export const zodPrompter = async (
 		let attempts = 0;
 		while (true) {
 			try {
-				const handler = handlers.find((h) => h.canHandle(fieldSchema, key));
-				if (!handler) {
+				const customChoices = options.choices?.[key];
+				let handler: typeof handlers[number] | undefined;
+				if (customChoices) {
+					// Prefer checkbox for arrays, select for single-value fields
+					// biome-ignore lint/suspicious/noExplicitAny: support multiple zod versions
+					const def = (fieldSchema as any)._def;
+					const typeName = def.typeName || def.type;
+					if (typeName === "ZodArray" || typeName === "array") {
+						handler = checkboxHandler;
+					} else {
+						handler = selectHandler;
+					}
+				} else {
+					handler = handlers.find((h) => h.canHandle(fieldSchema, key));
+				}
+
+					if (!handler) {
 					throw new Error(`No handler found for field: ${key}`);
 				}
 
-				const value = await handler.prompt(fieldSchema, key, message);
-
+				const value = await handler.prompt(fieldSchema, key, message, customChoices);
 				const result = fieldSchema.safeParse(value);
+
 				if (result.success) {
 					answers[key] = result.data;
 					break;

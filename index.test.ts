@@ -72,6 +72,31 @@ describe("zodPrompter", () => {
 		expect(result).toEqual({ toppings: ["pepperoni"] });
 	});
 
+	it("should use choices passed via options for array fields", async () => {
+		const schema = z.object({
+			toppings: z.array(z.string()),
+		});
+
+		vi.mocked(checkbox).mockResolvedValue(["pepperoni"]);
+
+		const result = await zodPrompter(schema, {
+			choices: {
+				toppings: ["pepperoni", "mushrooms"],
+			},
+		});
+
+		expect(checkbox).toHaveBeenCalledWith(
+			expect.objectContaining({
+				message: "Enter your toppings:",
+				choices: [
+					{ name: "pepperoni", value: "pepperoni" },
+					{ name: "mushrooms", value: "mushrooms" },
+				],
+			}),
+		);
+		expect(result).toEqual({ toppings: ["pepperoni"] });
+	});
+
 	it("should exit gracefully on Ctrl+C", async () => {
 		const schema = z.object({
 			name: z.string(),

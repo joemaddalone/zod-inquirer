@@ -18,9 +18,9 @@ describe("checkboxHandler", () => {
 			expect(checkboxHandler.canHandle(schema, "toppings")).toBe(true);
 		});
 
-		it("should not handle z.array(z.string())", () => {
+		it("should handle z.array(z.string())", () => {
 			const schema = z.array(z.string());
-			expect(checkboxHandler.canHandle(schema, "items")).toBe(false);
+			expect(checkboxHandler.canHandle(schema, "items")).toBe(true);
 		});
 
 		it("should not handle z.string()", () => {
@@ -54,6 +54,27 @@ describe("checkboxHandler", () => {
 				],
 			});
 			expect(result).toEqual(["pepperoni", "mushrooms"]);
+		});
+
+		it("should use provided choices when passed", async () => {
+			const schema = z.array(z.string());
+			vi.mocked(checkbox).mockResolvedValue(["pepperoni"]);
+
+			const result = await checkboxHandler.prompt(
+				schema,
+				"toppings",
+				"Select toppings:",
+				["pepperoni", "mushrooms"],
+			);
+
+			expect(checkbox).toHaveBeenCalledWith({
+				message: "Select toppings:",
+				choices: [
+					{ name: "pepperoni", value: "pepperoni" },
+					{ name: "mushrooms", value: "mushrooms" },
+				],
+			});
+			expect(result).toEqual(["pepperoni"]);
 		});
 
 		it("should use description from .describe() if available", async () => {

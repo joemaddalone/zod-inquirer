@@ -10,7 +10,7 @@ npm install zod-inquirer
 
 ## Usage
 
-Define your schema once, get validated prompts automatically:
+Define your schema once, get validated prompts automatically (example uses `choices` passed to `zodPrompter`):
 
 ```typescript
 import { z } from "zod";
@@ -26,17 +26,9 @@ const PizzaSchema = z.object({
   crust: z
     .enum(["thin", "thick", "stuffed"])
     .meta({ description: "Select your crust" }),
+  deliveryWindow: z.string().meta({ description: "Select delivery window" }),
   toppings: z
-    .array(
-      z.enum([
-        "pepperoni",
-        "mushrooms",
-        "onions",
-        "sausage",
-        "bacon",
-        "extra cheese",
-      ]),
-    )
+    .array(z.string())
     .min(1, { message: "You must select at least one topping." })
     .max(3, { message: "You can select up to 3 toppings." })
     .meta({ description: "Select up to 3 toppings" }),
@@ -44,7 +36,12 @@ const PizzaSchema = z.object({
   password: z.string().min(8).meta({ description: "Enter your password" }),
 });
 
-const pizza = await zodPrompter(PizzaSchema);
+const pizza = await zodPrompter(PizzaSchema, {
+  choices: {
+    deliveryWindow: ["ASAP", "In 30 minutes", "In 1 hour", "Sometime later"],
+    toppings: ["pepperoni", "mushrooms", "onions", "sausage", "bacon", "extra cheese"],
+  },
+});
 console.log(pizza);
 ```
 
@@ -55,6 +52,7 @@ This will automatically prompt the user with:
 - A number input for `age`
 - A select dropdown for `size`
 - A select dropdown for `crust`
+- A select dropdown for `deliveryWindow`
 - A checkbox list for `toppings`
 - A confirm checkbox for `acceptTerms`
 - A password input for `password`
@@ -67,8 +65,21 @@ All inputs are validated against your Zod schema with automatic retry on validat
 await zodPrompter(schema, {
   maxRetries: 3, // Maximum retry attempts for invalid input (default: 3)
   hint: "press Ctrl+C to abort", // Hint message shown on validation error
+  // Provide static choices for specific fields (strings or { name, value } objects)
+  choices: {
+    deliveryWindow: ["ASAP", "In 30 minutes", "In 1 hour", "Sometime later"],
+    toppings: ["pepperoni", "mushrooms", "onions"],
+  },
 });
 ```
+
+Notes:
+
+- The `choices` object is a mapping from schema field name to an array of choices.
+- If choices are provided for a field, the prompter will use them instead of deriving options from `z.enum`.
+- For array fields (e.g. `z.array(z.string())`) the prompter will use a checkbox multi-select; for single-value fields (e.g. `z.string()`) it will use a select.
+- Choices can be simple strings or objects with `{ name, value }` to control display text vs stored value.
+- Ensure the keys in `choices` exactly match your schema field names (case-sensitive).
 
 ## Supported Types
 
