@@ -41,7 +41,7 @@ describe("inputHandler", () => {
 
 			const result = await inputHandler.prompt(schema, "name", "Enter name:");
 
-			expect(input).toHaveBeenCalledWith({ message: "Enter name:", placeholder: undefined });
+			expect(input).toHaveBeenCalledWith({ message: "Enter name:", default: undefined });
 			expect(result).toBe("test value");
 		});
 
@@ -51,7 +51,7 @@ describe("inputHandler", () => {
 
 			const result = await inputHandler.prompt(schema, "firstName", "Enter your first name:");
 
-			expect(input).toHaveBeenCalledWith({ message: "Your first name", placeholder: undefined });
+			expect(input).toHaveBeenCalledWith({ message: "Your first name", default: undefined });
 			expect(result).toBe("John");
 		});
 
@@ -61,7 +61,7 @@ describe("inputHandler", () => {
 
 			const result = await inputHandler.prompt(schema, "lastName", "Enter your last name:");
 
-			expect(input).toHaveBeenCalledWith({ message: "Your last name", placeholder: undefined });
+			expect(input).toHaveBeenCalledWith({ message: "Your last name", default: undefined });
 			expect(result).toBe("Doe");
 		});
 
@@ -71,7 +71,7 @@ describe("inputHandler", () => {
 
 			const result = await inputHandler.prompt(schema, "name", "Enter your name:");
 
-			expect(input).toHaveBeenCalledWith({ message: "Enter your name:", placeholder: "e.g. John Doe" });
+			expect(input).toHaveBeenCalledWith({ message: "Enter your name:", default: "e.g. John Doe" });
 			expect(result).toBe("Jane Smith");
 		});
 
@@ -81,7 +81,7 @@ describe("inputHandler", () => {
 
 			const result = await inputHandler.prompt(schema, "name", "Enter your name:");
 
-			expect(input).toHaveBeenCalledWith({ message: "Your full name", placeholder: "e.g. John Doe" });
+			expect(input).toHaveBeenCalledWith({ message: "Your full name", default: "e.g. John Doe" });
 			expect(result).toBe("Jane Smith");
 		});
 	});
