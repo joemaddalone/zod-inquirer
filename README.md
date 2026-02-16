@@ -1,4 +1,4 @@
-# zod-inquirer (WIP)
+# zod-inquirer
 
 A TypeScript library that automatically generates validated CLI prompts from Zod schemas.
 
