@@ -18,6 +18,11 @@ describe("inputHandler", () => {
 			expect(inputHandler.canHandle(schema, "name")).toBe(true);
 		});
 
+		it("should handle z.string().default()", () => {
+			const schema = z.string().default("placeholder");
+			expect(inputHandler.canHandle(schema, "name")).toBe(true);
+		});
+
 		it("should not handle z.number()", () => {
 			const schema = z.number();
 			expect(inputHandler.canHandle(schema, "age")).toBe(false);
@@ -36,7 +41,7 @@ describe("inputHandler", () => {
 
 			const result = await inputHandler.prompt(schema, "name", "Enter name:");
 
-			expect(input).toHaveBeenCalledWith({ message: "Enter name:" });
+			expect(input).toHaveBeenCalledWith({ message: "Enter name:", placeholder: undefined });
 			expect(result).toBe("test value");
 		});
 
@@ -46,7 +51,7 @@ describe("inputHandler", () => {
 
 			const result = await inputHandler.prompt(schema, "firstName", "Enter your first name:");
 
-			expect(input).toHaveBeenCalledWith({ message: "Your first name" });
+			expect(input).toHaveBeenCalledWith({ message: "Your first name", placeholder: undefined });
 			expect(result).toBe("John");
 		});
 
@@ -56,8 +61,28 @@ describe("inputHandler", () => {
 
 			const result = await inputHandler.prompt(schema, "lastName", "Enter your last name:");
 
-			expect(input).toHaveBeenCalledWith({ message: "Your last name" });
+			expect(input).toHaveBeenCalledWith({ message: "Your last name", placeholder: undefined });
 			expect(result).toBe("Doe");
+		});
+
+		it("should use placeholder from .default() if available", async () => {
+			const schema = z.string().default("e.g. John Doe");
+			vi.mocked(input).mockResolvedValue("Jane Smith");
+
+			const result = await inputHandler.prompt(schema, "name", "Enter your name:");
+
+			expect(input).toHaveBeenCalledWith({ message: "Enter your name:", placeholder: "e.g. John Doe" });
+			expect(result).toBe("Jane Smith");
+		});
+
+		it("should use both description and placeholder with .describe().default()", async () => {
+			const schema = z.string().describe("Your full name").default("e.g. John Doe");
+			vi.mocked(input).mockResolvedValue("Jane Smith");
+
+			const result = await inputHandler.prompt(schema, "name", "Enter your name:");
+
+			expect(input).toHaveBeenCalledWith({ message: "Your full name", placeholder: "e.g. John Doe" });
+			expect(result).toBe("Jane Smith");
 		});
 	});
 });

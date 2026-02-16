@@ -59,6 +59,20 @@ This will automatically prompt the user with:
 
 All inputs are validated against your Zod schema with automatic retry on validation failure.
 
+## Placeholders
+
+You can add placeholder text to string inputs using `.default()`:
+
+```typescript
+const UserSchema = z.object({
+  name: z.string().describe("Enter your name").default("e.g. John Doe"),
+  email: z.string().email().describe("Enter your email").default("user@example.com"),
+  username: z.string().default("e.g. johndoe123"), // placeholder without custom description
+});
+```
+
+The placeholder text will be displayed as a hint in the input field but won't be used as an actual default value.
+
 ## Options
 
 ```typescript
